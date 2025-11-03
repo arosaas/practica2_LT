@@ -8,7 +8,7 @@
     git checkout -b nombre-de-tu-rama
     ```
     Usa nombres cortos y descriptivos sin espacios
-    
+
 ## 2. **Hacer cambios y confirmarlos**    
     
     ```bash
@@ -26,13 +26,13 @@
 
 En GitHub, os vais ahora a https://github.com/jomafer97/practica2_LT, y os saldrá la opción de hacer un Pull Request (PR)
 
-### 1. **Selecciona tu rama como source (origen).**
+#### 1. **Selecciona tu rama como source (origen).**
 
-### 2. **Selecciona main como target (destino).**
+#### 2. **Selecciona main como target (destino).**
 
-### 3. **Añade un título y una descripción de lo que hiciste.**
+#### 3. **Añade un título y una descripción de lo que hiciste.**
 
-### 4. **Envía el Pull Request.**
+#### 4. **Envía el Pull Request.**
 
 💬 Otros miembros pueden revisar tu código, hacer comentarios o aprobar el merge.
 
