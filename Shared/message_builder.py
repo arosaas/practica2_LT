@@ -28,7 +28,7 @@ messages = {
 
     "ERLANG_RESPONSE": {
         "Erlangs": None,            # (Erlang)
-        "maxNumCalls": None         # (Calls)
+        "maxLinesNum": None         # (Calls)
     },
 
     # BW CALCULATION REQUEST
@@ -94,7 +94,7 @@ def build_message(type: str, **kwargs):
         else:
             raise KeyError(f"Error: invalid argument '{key}' for message '{type}'.")
 
-    return json.dumps(message, indent=4)
+    return message
 
 def validate_message(message_dict: dict, expected_type: str, template: dict = messages):
     if not isinstance(message_dict, dict):
