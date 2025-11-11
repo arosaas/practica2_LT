@@ -11,11 +11,26 @@ from Shared.message_builder import build_message, validate_message
 client = ClientSocket()
 
 message = build_message(
+    "RT_REQUEST",
+    codec="G.711",
+    jitter=20,
+    netDelay=200
+)
+
+addr = ('127.0.0.1', 32003)
+
+client.send_message(message, addr)
+
+message, address = client.recv_message(1024)
+
+print(message)
+
+message = build_message(
     "ERLANG_REQUEST",
-    numChannels=150,             # 100 lineas
-    numCalls=20,                # 500 Llamadas por hora
-    avgDuration=180,             # Duración promedio de la llamada: 180 segundos (3 minutos)
-    blockingPercentage=0.03         # Porcentaje máximo de bloqueo tolerado: 1%
+    numLines=150,
+    numCalls=20,
+    avgDuration=180,
+    blockingPercentage=0.03
 )
 
 addr = ('127.0.0.1', 32004)
@@ -29,9 +44,10 @@ print(message)
 message = build_message(
     "BW_REQUEST",
     codec="G.711",
-    extendedHeader=0,
-    maxNumCalls=180,
-    ReservedBW=60
+    pppoe=False,
+    vlan8021q=False,
+    reservedBW=0.3,
+    totalCalls=150*20
 )
 
 addr = ('127.0.0.1', 32005)
@@ -42,15 +58,37 @@ message, address = client.recv_message(1024)
 
 print(message)
 
+callBW = {
+    "RTP": message["compressed"]["callBW"],
+    "cRTP": message["uncompressed"]["callBW"]
+}
+
+BWst = {
+    "RTP": message["compressed"]["BWst"],
+    "cRTP": message["uncompressed"]["BWst"]
+}
+
 message = build_message(
     "COST_REQUEST",
-    BWstRTP=300,             # 100 lineas
-    BWstcRTP=150,                # 500 Llamadas por hora
-    Pmax=500,             # Duración promedio de la llamada: 180 segundos (3 minutos)
-    numCalls=100         # Porcentaje máximo de bloqueo tolerado: 1%
+    callBW=callBW,
+    BWst=BWst,
+    Pmax = 2e4
 )
 
 addr = ('127.0.0.1', 32006)
+
+client.send_message(message, addr)
+
+message, address = client.recv_message(1024)
+
+print(message)
+
+message = build_message(
+    "PLR_REQUEST",
+    bitstream="000001111110001101100000010000000111010111111110000110000"
+)
+
+addr = ('127.0.0.1', 32007)
 
 client.send_message(message, addr)
 
