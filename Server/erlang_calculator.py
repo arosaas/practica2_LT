@@ -7,6 +7,7 @@ class Erlang_calculator_service:
     def __init__(self, logger):
         self.serviceSocket = ServerSocket('127.0.0.1', 32004)
         self.logger = logger
+        self.ID = "ERLANG_CALCULATOR"
 
     def erlang_b(self, E, N):
         B = 1.0
@@ -24,19 +25,19 @@ class Erlang_calculator_service:
 
 
     def task(self, message, addr):
-        numChannels = message ["numChannels"]
+        numLines = message ["numLines"]
         numCalls= message["numCalls"]
         avgDuration = message["avgDuration"]
         blockingPercentage = message["blockingPercentage"]
         self.logger.info("ERLANG CALCULATOR: Succesfully called")
 
-        A = (numChannels*numCalls*avgDuration)/3600
-        maxNum = self.needed_lines(A, blockingPercentage)
+        A = (numLines*numCalls*avgDuration)/3600
+        maxLines = self.needed_lines(A, blockingPercentage)
 
         result = build_message(
             "ERLANG_RESPONSE",
             Erlangs=A,
-            maxLinesNum= maxNum
+            maxLines= maxLines
         )
 
         self.serviceSocket.send_message(result, addr)
@@ -46,7 +47,7 @@ class Erlang_calculator_service:
             message, addr = self.serviceSocket.recv_message(1024)
 
             if validate_message(message, "ERLANG_REQUEST"):
-                self.logger.info("ERLANG CALCULATOR: Valid message received")
+                self.logger.info(f"{self.ID}: Valid message received")
                 self.logger.info(message)
 
                 thread = threading.Thread(
@@ -57,7 +58,7 @@ class Erlang_calculator_service:
 
                 thread.start()
             else:
-                self.logger.info("ERLANG CALCULATOR: Wrong message received")
+                self.logger.info(f"{self.ID}: Wrong message received")
                 pass
 
     def close(self):

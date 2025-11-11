@@ -5,22 +5,20 @@ messages = {
     "RT_REQUEST": {
         "codec": None,
         "jitter": None,           # (ms)
-        "networkSpeed": None,     # (Mbps)
-        "networkDelay": None      # (ms)
+        "netDelay": None      # (ms)
     },
 
     "RT_RESPONSE": {
-        "Rt2jit": None,           # (ms)
-        "Rt1_5jit": None,         # (ms)
-        "CSI": None,              # (ms)
-        "Rphy": None,             # (ms)
-        "Rpaq": None,             # (ms)
-        "Rs": None                # (ms)
+        "rt2jit": None,           # (ms)
+        "rt1_5jit": None,         # (ms)
+        "csi": None,              # (ms)
+        "rphy": None,             # (ms)
+        "rpac": None,             # (ms)
     },
 
     # TRAFFIC CALCULATION REQUEST
     "ERLANG_REQUEST": {
-        "numChannels": None,        # (Channels)
+        "numLines": None,           # (Lines)
         "numCalls": None,           # (Calls)
         "avgDuration": None,        # (s)
         "blockingPercentage": None  # (0,1)
@@ -28,42 +26,54 @@ messages = {
 
     "ERLANG_RESPONSE": {
         "Erlangs": None,            # (Erlang)
-        "maxLinesNum": None         # (Calls)
+        "maxLines": None               # (Lines)
     },
 
     # BW CALCULATION REQUEST
     "BW_REQUEST": {
         "codec": None,
-        "extendedHeader": None,     # (bits),
-        "maxNumCalls": None,        # (Calls)
-        "ReservedBW": None          # (0, 1)
+        "pppoe": None,              # (Bool)
+        "vlan8021q": None,             # (Bool)
+        "reservedBW": None,         # (0, 1)
+        "totalCalls":None           # (Calls)
     },
 
     "BW_RESPONSE": {
-        "uncompressedPktLength": None, # (bits)
-        "compressedPktLength": None,   # (bits)
-        "pps": None,                   # (packets per second)
-        "BWcRTP": None,         # (bps)
-        "BWRTP": None           # (bps)
+        "compressed":{
+            "packetLength": None,  # (bits)
+            "callBW": None,        # (bps)
+            "BWst": None           # (Mbps)
+        },
+        "uncompressed":{
+            "PacketLength": None,  # (bits)
+            "callBW": None,        # (bps)
+            "BWst": None           # (Mbps)
+        },
+        "pps":None                  # (packets per second)
     },
 
     # COST CALCULATION REQUEST
     "COST_REQUEST": {
-        "BWstRTP": None,            # (Mbps)
-        "BWstcRTP": None,           # (Mbps)
+        "callBW":{
+            "RTP":None,
+            "cRTP":None
+        },
+        "BWst":{
+            "RTP":None,
+            "cRTP":None
+        },
         "Pmax": None,               # (euros)
-        "numCalls": None            # (calls)
     },
 
     "COST_RESPONSE": {
-        "PMbps": None,              # (euros)
+        "mbpsCost": None,          # (euros)
         "RTP":{
-            "valid": None,
-            "calls": None
+            "valid": None,          # (bool)
+            "possibleCalls": None
         },
         "cRTP":{
-            "valid": None,
-            "calls": None
+            "valid": None,          # (bool)
+            "possibleCalls": None
         }
     },
 
