@@ -2,69 +2,55 @@ from serverSocket import ServerSocket
 from Shared.message_builder import build_message, validate_message
 import threading
 
+COST_MBPS = 100.0
 class Cost_calculator_service:
     def __init__(self, logger):
         self.serviceSocket = ServerSocket('127.0.0.1', 32006)
         self.logger = logger
-        self.id = "cost_calculation_request_ID"
+        self.ID = "COST_CALCULATOR"
 
     def task(self, message, addr):
-        self.logger.info("COST CALCULATION REQUEST: Successfully called")
-        self.logger.info(f"Received message: {message}")
-
         try:
-            # Extract fields from message
-            BWstRTP = message["BWstRTP"]
-            BWstcRTP = message["BWstcRTP"]
+            callBW = message["callBW"]
+            BWst = message["BWst"]
             Pmax = message["Pmax"]
-            numCalls = message["numCalls"]
 
-            # Fixed price per Mbps
-            PMbps = 1.0
+            cost = {
+                "RTP": BWst["RTP"] * COST_MBPS,
+                "cRTP": BWst["cRTP"] * COST_MBPS
+            }
 
-            # Compute total costs
-            total_cost_stRTP = BWstRTP * PMbps
-            total_cost_stcRTP = BWstcRTP * PMbps
+            rtp = {
+                "valid": cost["RTP"] <= Pmax,
+                "possibleCalls": int(BWst["RTP"] * 1e6 / callBW["RTP"]) if cost["RTP"] <= Pmax else int(
+                    Pmax * 1.0 / (callBW["RTP"] * 1e-6 * COST_MBPS))
+            }
 
-            # Determine affordability
-            verificationstRTP = total_cost_stRTP <= Pmax
-            verificationstcRTP = total_cost_stcRTP <= Pmax
+            crtp = {
+                "valid": cost["cRTP"] <= Pmax,
+                "possibleCalls": int(BWst["cRTP"] * 1e6 / callBW["cRTP"]) if cost["cRTP"] <= Pmax else int(
+                    Pmax * 1.0 / (callBW["cRTP"] * 1e-6 * COST_MBPS))
+            }
 
-            # Compute number of affordable calls
-            if verificationstRTP:
-                compliantCallstRTP = numCalls
-            else:
-                compliantCallstRTP = int((Pmax / total_cost_stRTP) * numCalls) if total_cost_stRTP > 0 else 0
-
-            if verificationstcRTP:
-                compliantCallstcRTP = numCalls
-            else:
-                compliantCallstcRTP = int((Pmax / total_cost_stcRTP) * numCalls) if total_cost_stcRTP > 0 else 0
-
-            # Build the response
             response = build_message(
                 "COST_RESPONSE",
-                PMbps=PMbps,
-                verificationstRTP=verificationstRTP,
-                verificationstcRTP=verificationstcRTP,
-                compliantCallstRTP=compliantCallstRTP,
-                compliantCallstcRTP=compliantCallstcRTP
+                mbpsCost=COST_MBPS,
+                RTP=rtp,
+                cRTP=crtp
             )
 
-            # Send the response
             self.serviceSocket.send_message(response, addr)
-            self.logger.info(f"Response sent: {response}")
 
         except Exception as e:
-            self.logger.error(f"Error during cost calculation: {e}")
+            self.logger.error(f"Error during cost calculation: {str(e)}")
 
     def start(self):
-        self.logger.info("COST CALCULATION REQUEST SERVICE: Started and listening...")
         while True:
             message, addr = self.serviceSocket.recv_message(1024)
 
-            if validate_message(message, "COST_REQUEST"):
-                self.logger.info("COST CALCULATION REQUEST: Valid message received")
+            try:
+                self.logger.info(f"{self.ID}: Petition received from client {addr}")
+                validate_message(message, "COST_REQUEST")
                 self.logger.info(message)
 
                 thread = threading.Thread(
@@ -72,10 +58,13 @@ class Cost_calculator_service:
                     args=(message, addr),
                     daemon=True
                 )
+
                 thread.start()
-            else:
-                self.logger.info("COST CALCULATION REQUEST: Wrong message received")
-                pass
+
+            except Exception as e:
+                self.logger.error(f"{self.ID}: {str(e)}")
+                error_msg = build_message("ERROR", source=self.ID, error=str(e))
+                self.serviceSocket.send_message(error_msg, addr)
 
     def close(self):
         self.serviceSocket.close()

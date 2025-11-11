@@ -1,4 +1,4 @@
-import sys, os, threading, time
+import sys, os, threading, time, logging
 
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 if project_root not in sys.path:
@@ -8,21 +8,29 @@ from rt_calculator import Rt_calculator_service
 from erlang_calculator import Erlang_calculator_service
 from bw_calculator import BW_calculator_service
 from cost_calculator import Cost_calculator_service
-from server_logs import Server_logger
-
+from plr_calculator import PLR_calculator_service
 class Server:
     def __init__(self):
-        self.serv_logger = Server_logger()
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.INFO)
+        self.file_handler = logging.FileHandler('server.log', mode='a', encoding='utf-8')
+        self.formatter = logging.Formatter(
+            '%(asctime)s (%(levelname)s) - %(message)s'
+        )
+        self.file_handler.setFormatter(self.formatter)
+        self.logger.addHandler(self.file_handler)
+
         self.services = [
-            Rt_calculator_service(self.serv_logger.logger),
-            Erlang_calculator_service(self.serv_logger.logger),
-            Cost_calculator_service(self.serv_logger.logger),
-            BW_calculator_service(self.serv_logger.logger)
+            Rt_calculator_service(self.logger),
+            Erlang_calculator_service(self.logger),
+            Cost_calculator_service(self.logger),
+            BW_calculator_service(self.logger),
+            PLR_calculator_service(self.logger)
         ]
         self.service_threads = []
 
     def start_services(self):
-        self.serv_logger.logger.info("Test")
+        self.logger.info("Starting server...")
         for service in self.services:
             self.service_threads.append(threading.Thread(
                 target=service.start,
@@ -31,6 +39,8 @@ class Server:
 
         for thread in self.service_threads:
             thread.start()
+
+        self.logger.info("Server successfully started.")
 
     def stop(self):
         for service in self.services:
@@ -45,7 +55,7 @@ if __name__ == "__main__":
             time.sleep(0.1)
 
     except KeyboardInterrupt:
-        print("\nInterrupción recibida (Ctrl+C). Iniciando cierre seguro.")
+        print("\nShutting down...")
 
     finally:
         server.stop()

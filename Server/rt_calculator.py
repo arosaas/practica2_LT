@@ -32,38 +32,38 @@ class Rt_calculator_service:
     def task(self, message, addr):
         codec = message["codec"]
         jitter = message["jitter"]
-        netSpeed = message["networkSpeed"]
-        netDelay = message["networkDelay"]
+        netDelay = message["netDelay"]
 
         if codec not in self.db:
             self.logger.error(f"{self.ID}: Invalid codec received '{codec}'")
             response = build_message(
                 "ERROR",
                 source=self.ID,
-                error=f"Provided codec is not registered {codec}"
+                error=f"f{self.ID}:Provided codec is not registered {codec}"
             )
             self.serviceSocket.send_message(response, addr)
             return
 
-        codec_data = self.db["codec"]
+        codec_data = self.db[codec]
 
-        CSI = codec_data["CSI (ms)"]
-        Packet = codec_data["VPS (ms)"] - codec_data["CSI (ms)"]
-        try:
-            response = build_message(
-                "ERLANG_REQUEST",
-                numChannels=20,
-                numCalls=10,
-                avgDuration=5,
-                blockingPercentage=2
-            )
+        csi = codec_data["CSI (ms)"]
+        rphy = csi*0.1
+        packet = codec_data["VPS (ms)"] - codec_data["CSI (ms)"]
+        algD = codec_data["algD (ms)"]
+        rjitter2 = 2*jitter
+        rjitter15 = 1.5*jitter
 
-        except Exception as e:
-            response = build_message(
-                "ERROR",
-                source=self.ID,
-                message=str(e)
-            )
+        rt2 = csi + packet + algD + rjitter2 + netDelay
+        rt15 = csi + packet + algD + rjitter15 + netDelay
+
+        response = build_message(
+            "RT_RESPONSE",
+            rt2jit=rt2,
+            rt1_5jit= rt15,
+            csi=csi,
+            rphy=rphy,
+            rpac=packet
+        )
 
         self.serviceSocket.send_message(response, addr)
 
@@ -72,9 +72,7 @@ class Rt_calculator_service:
             message, addr = self.serviceSocket.recv_message(1024)
 
             try:
-                self.logger.info(f"{self.ID}: Petition received from client {addr}")
                 validate_message(message, "RT_REQUEST")
-                self.logger.info(message)
 
                 thread = threading.Thread(
                     target=self.task,
