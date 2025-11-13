@@ -8,7 +8,7 @@ class Rt_calculator_service:
         self.serviceSocket = ServerSocket('127.0.0.1', 32003)
         self.logger = logger
         self.ID = "RT_CALCULATOR"
-        self.db = self._load_database('/Server/codec_db.json')
+        self.db = self._load_database('codec_db.json')
 
     def _load_database(self, filename):
         self.logger.info(f"{self.ID}: Attempting to load database from {filename}")
