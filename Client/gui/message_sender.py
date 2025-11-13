@@ -8,8 +8,7 @@ from Shared.message_builder import build_message
 
 class MessageSender:
     """Clase genérica para enviar mensajes de cualquier tipo al backend."""
-    
-    # Mapeo de tipos de mensaje a puertos del servidor
+
     MESSAGE_PORTS = {
         "RT_REQUEST": 32003,
         "ERLANG_REQUEST": 32004,
@@ -28,7 +27,6 @@ class MessageSender:
             payload_data (dict): Datos del mensaje (codec, jitter, etc.)
             callback (function): Función opcional a ejecutar con la respuesta
         """
-        # Verificar datos
         if not payload_data:
             form = GridForm()
             form.add_widget(Label(text=f"No hay datos para enviar ({msg_type})."))
@@ -36,7 +34,6 @@ class MessageSender:
             popup.open()
             return
 
-        # Construir mensaje usando el builder
         try:
             message = build_message(msg_type, **payload_data)
         except Exception as e:
@@ -45,17 +42,15 @@ class MessageSender:
             )
             return
 
-        # Obtener puerto correcto para este tipo de mensaje
         port = MessageSender.MESSAGE_PORTS.get(msg_type, 32003)
-        
-        # Enviar mensaje
+
         client = ClientSocket()
         addr = ("127.0.0.1", port)
         try:
             client.send_message(message, addr)
             answer, _ = client.recv_message(1024)
             print(f"Respuesta recibida ({msg_type}): {answer}")
-            
+
             # Ejecutar callback si se proporciona
             if callback:
                 callback(answer)
